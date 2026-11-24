@@ -89,8 +89,41 @@ Reply with JSON only, in exactly this shape:
   "hashtags": ["#shorts", "..."]
 }}"""
 
+# Used for "story" niches (e.g. Reddit stories). Original fiction, clearly labelled.
+STORY_PROMPT = """You write viral storytime YouTube Shorts in the style of popular
+Reddit posts (AITA, TIFU, revenge, entitled people, etc.).
 
-def write_script_with_gemini(topic):
+Story idea: "{topic}"
+
+Write an ORIGINAL, fictional first-person story narrated as if the poster is
+telling it, about 45 seconds aloud (about 140 words - between 130 and 145). Rules:
+- First sentence is the hook, like a post title read aloud
+  (e.g. "Am I wrong for refusing to give up my seat for my sister's dog?").
+- Fast pacing, short sentences, clear conflict, one satisfying twist or payoff.
+- End with a question that makes viewers argue in the comments
+  (e.g. "So... was I wrong?").
+- Invent everything: no real people, real usernames, or real Reddit posts.
+  Keep it PG-13, no slurs, nothing hateful.
+- Plain spoken text only: no emojis, hashtags, stage directions or markdown.
+
+Split into 6-9 scenes. For each scene give a 1-3 word stock-footage search
+query for something that can be FILMED that matches the moment (e.g.
+"wedding party", "angry woman", "office desk", "car keys").
+
+Reply with JSON only, in exactly this shape:
+{{
+  "title": "catchy title under 70 characters, like a Reddit post title",
+  "scenes": [{{"narration": "...", "search": "..."}}],
+  "description": "1-2 sentence description",
+  "hashtags": ["#shorts", "#storytime", "..."]
+}}"""
+
+
+def is_story(niche_or_style):
+    return any(w in (niche_or_style or "").lower() for w in ("story", "stories", "reddit", "aita"))
+
+
+def write_script_with_gemini(topic, style="facts"):
     if not GEMINI_API_KEY:
         sys.exit(
             "\nERROR: No Gemini key found.\n"
@@ -116,7 +149,7 @@ def write_script_with_gemini(topic):
         try:
             resp = client.models.generate_content(
                 model=model,
-                contents=SCRIPT_PROMPT.format(topic=topic),
+                contents=(STORY_PROMPT if is_story(style) else SCRIPT_PROMPT).format(topic=topic),
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json", temperature=0.9
                 ),
@@ -463,7 +496,7 @@ def slugify(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:50] or "short"
 
 
-def make_video(topic, voice=DEFAULT_VOICE, script_file=None, keep_temp=False):
+def make_video(topic, voice=DEFAULT_VOICE, script_file=None, keep_temp=False, style="facts"):
     """Make one Short. Returns (path_to_mp4, details_dict)."""
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     name = f"{stamp}_{slugify(topic)}"
@@ -472,7 +505,7 @@ def make_video(topic, voice=DEFAULT_VOICE, script_file=None, keep_temp=False):
 
     print(f"\n[1/5] Writing the script about: {topic}")
     data = (script_from_file(script_file, topic) if script_file
-            else write_script_with_gemini(topic))
+            else write_script_with_gemini(topic, style))
     scenes = [s for s in data["scenes"] if s.get("narration", "").strip()]
     full_text = " ".join(s["narration"].strip() for s in scenes)
     log(f'title: {data["title"]}  ({len(full_text.split())} words)')
@@ -499,7 +532,9 @@ def make_video(topic, voice=DEFAULT_VOICE, script_file=None, keep_temp=False):
     meta = {
         "topic": topic,
         "title": data["title"],
-        "description": data.get("description", "") + "\n\n" + " ".join(data.get("hashtags", [])),
+        "description": data.get("description", "")
+        + ("\n\nFictional story for entertainment. Narrated with an AI voice." if is_story(style) else "")
+        + "\n\n" + " ".join(data.get("hashtags", [])),
         "tags": [h.lstrip("#") for h in data.get("hashtags", [])],
         "script": full_text,
         "scenes": scenes,
@@ -520,6 +555,7 @@ def main():
     p.add_argument("topic", nargs="?", help='e.g. "why octopuses have three hearts"')
     p.add_argument("--voice", default=DEFAULT_VOICE, help="Edge TTS voice name")
     p.add_argument("--script-file", help="use your own script text instead of Gemini")
+    p.add_argument("--story", action="store_true", help="Reddit-style story instead of facts")
     p.add_argument("--keep-temp", action="store_true", help="keep working files")
     p.add_argument("--list-voices", action="store_true", help="show English voices")
     args = p.parse_args()
@@ -535,7 +571,8 @@ def main():
         if not args.topic:
             sys.exit("No topic given.")
 
-    out_mp4, _ = make_video(args.topic, args.voice, args.script_file, args.keep_temp)
+    out_mp4, _ = make_video(args.topic, args.voice, args.script_file, args.keep_temp,
+                            "story" if args.story else "facts")
     print(f"\nDone! Your Short is ready:\n  {out_mp4}\n")
 
 if __name__ == "__main__":

@@ -22,27 +22,36 @@ import make_short as ms
 import uploaders
 
 HISTORY = ms.HERE / "history.json"
-NICHE = os.getenv("NICHE", "").strip() or "mind-blowing science and nature facts"
+# Several niches separated by commas or "|" -> the bot takes turns between them.
+NICHES = [n.strip() for n in os.getenv("NICHE", "").replace("|", ",").split(",") if n.strip()] \
+    or ["weird history", "reddit stories"]
+STORY_VOICE = os.getenv("STORY_VOICE", "en-US-AvaNeural").strip()
 
 
 def load_history():
     return json.loads(HISTORY.read_text()) if HISTORY.exists() else []
 
 
-def pick_topic(history):
+def pick_topic(history, niche):
     """Ask Gemini for a fresh, specific topic in the niche that we haven't done."""
     from google import genai
     from google.genai import types
 
     done = [h["topic"] for h in history][-150:]
+    if ms.is_story(niche):
+        ask = ("Suggest ONE new, original story premise (one sentence, e.g. 'refusing to pay "
+               "for my brother-in-law's surprise vacation'). Make it relatable, dramatic and "
+               "different from the ones above.")
+    else:
+        ask = ("Suggest ONE new, specific topic with a strong curiosity hook that fits the "
+               "niche, is factually solid, and would make viewers stop scrolling.")
     prompt = f"""You choose topics for a YouTube Shorts / TikTok channel.
-Channel niche: "{NICHE}"
+Channel niche: "{niche}"
 
 Already covered (do NOT repeat or closely overlap these):
 {json.dumps(done, indent=0) if done else "(nothing yet)"}
 
-Suggest ONE new, specific topic with a strong curiosity hook that fits the
-niche, is factually solid, and would make viewers stop scrolling.
+{ask}
 Reply with JSON only: {{"topic": "..."}}"""
 
     client = genai.Client(api_key=ms.GEMINI_API_KEY)
@@ -71,11 +80,14 @@ def main():
     args = p.parse_args()
 
     history = load_history()
-    topic = args.topic or pick_topic(history)
-    print(f"Niche: {NICHE}\nToday's topic: {topic}")
+    niche = NICHES[len(history) % len(NICHES)]          # take turns between niches
+    topic = args.topic or pick_topic(history, niche)
+    print(f"Niche: {niche}\nToday's topic: {topic}")
 
-    video, meta = ms.make_video(topic)
-    entry = {"topic": topic, "title": meta["title"], "video_file": video.name,
+    story = ms.is_story(niche)
+    voice = STORY_VOICE if story else ms.DEFAULT_VOICE
+    video, meta = ms.make_video(topic, voice=voice, style="story" if story else "facts")
+    entry = {"niche": niche, "topic": topic, "title": meta["title"], "video_file": video.name,
              "made_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
 
     failures = []

@@ -1,7 +1,7 @@
 # Phase 2: Automatic daily posting
 
 Once this is set up, GitHub runs the bot every day for free, even when your Mac is off. Each day it:
-1. Asks Gemini for a fresh topic in your niche (never repeats a topic)
+1. Alternates between weird history and Reddit-style stories, with Gemini picking a fresh topic each time (it never repeats)
 2. Makes the Short
 3. Uploads it to YouTube and TikTok
 4. Saves a copy you can download for 14 days
@@ -74,7 +74,7 @@ On GitHub, open your `shorts-bot` repository and go to **Settings**, then **Secr
 
 | Name | Value |
 |---|---|
-| `NICHE` | your channel theme, e.g. `mind-blowing ocean and nature facts` |
+| `NICHE` | `weird history, reddit stories` (the bot alternates between them each day) |
 | `YT_PRIVACY` | `private` for now. Change it to `public` once the YouTube audit is approved. |
 | `TIKTOK_PRIVACY` | `SELF_ONLY` for now. Change it to `PUBLIC_TO_EVERYONE` once TikTok approves your app. |
 
