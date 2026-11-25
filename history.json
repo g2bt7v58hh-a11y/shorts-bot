@@ -1,0 +1,10 @@
+[
+  {
+    "niche": "weird history",
+    "topic": "In 1866, the Liechtenstein army sent 80 soldiers into battle and returned with 81 because they made a new friend along the way.",
+    "title": "TIFU by accidentally recruiting an enemy player during a match",
+    "video_file": "20261125-064608_in-1866-the-liechtenstein-army-sent-80-soldiers-in.mp4",
+    "made_at": "2026-11-25T06:47:27+00:00",
+    "youtube": "FAILED: <HttpError 401 when requesting None returned \"Unauthorized\". Details: \"[{'message': 'Unauthorized', 'domain': 'youtube.header', 'reason': 'youtubeSignupRequired', 'location': 'Authorization', 'locationType': 'header'}]\">"
+  }
+]
