@@ -21,7 +21,8 @@ from pathlib import Path
 import make_short as ms
 import uploaders
 
-HISTORY = ms.HERE / "history.json"
+# each channel keeps its own list (channel 2 uses HISTORY_FILE=history2.json)
+HISTORY = ms.HERE / os.getenv("HISTORY_FILE", "history.json")
 # Several niches separated by commas or "|" -> the bot takes turns between them.
 NICHES = [n.strip() for n in os.getenv("NICHE", "").replace("|", ",").split(",") if n.strip()] \
     or ["weird history", "reddit stories"]
