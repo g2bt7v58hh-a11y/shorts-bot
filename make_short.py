@@ -429,7 +429,7 @@ def write_captions(words, total, path, script_text=""):
                 ti = look
                 # only mark a break if this spoken word finishes the token
                 if norm(tokens[look]).endswith(target):
-                    w["pause_after"] = bool(re.search(r"[.,!?;:—-]$", tokens[look]))
+                    w["pause_after"] = bool(re.search(r"[.,!?;:‚Äî-]$", tokens[look]))
                     ti = look + 1
                 break
 
@@ -533,7 +533,7 @@ def make_video(topic, voice=DEFAULT_VOICE, script_file=None, keep_temp=False, st
         "topic": topic,
         "title": data["title"],
         "description": data.get("description", "")
-        + ("\n\nFictional story for entertainment. Narrated with an AI voice." if is_story(style) else "")
+        + ("\n\nFictional story for entertainment." if is_story(style) else "")
         + "\n\n" + " ".join(data.get("hashtags", [])),
         "tags": [h.lstrip("#") for h in data.get("hashtags", [])],
         "script": full_text,
