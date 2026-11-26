@@ -1,10 +1,12 @@
-# Makes and posts one Short every day, for free, on GitHub's computers.
-# Change the time: edit the "cron" line (it's in UTC). "37 15 * * *" = 15:37 UTC daily.
+# Makes and posts two Shorts every day, for free, on GitHub's computers.
+# Change the times: edit the "cron" lines (they're in UTC).
+# "37 3 * * *" = 03:37 UTC (10:37pm US Eastern), "37 15 * * *" = 15:37 UTC (10:37am Eastern).
 # Run it right now: GitHub > Actions tab > "Daily Short" > "Run workflow".
 name: Daily Short
 
 on:
   schedule:
+    - cron: "37 3 * * *"
     - cron: "37 15 * * *"
   workflow_dispatch:
     inputs:
