@@ -429,7 +429,7 @@ def write_captions(words, total, path, script_text=""):
                 ti = look
                 # only mark a break if this spoken word finishes the token
                 if norm(tokens[look]).endswith(target):
-                    w["pause_after"] = bool(re.search(r"[.,!?;:‚Äî-]$", tokens[look]))
+                    w["pause_after"] = bool(re.search(r"[.,!?;:—-]$", tokens[look]))
                     ti = look + 1
                 break
 
