@@ -120,7 +120,9 @@ Reply with JSON only, in exactly this shape:
 
 
 def is_story(niche_or_style):
-    return any(w in (niche_or_style or "").lower() for w in ("story", "stories", "reddit", "aita"))
+    # whole words only, so "weird history" is NOT treated as a story niche
+    return bool(re.search(r"\b(story|stories|storytime|reddit|aita|tifu)\b",
+                          (niche_or_style or "").lower()))
 
 
 def write_script_with_gemini(topic, style="facts"):
@@ -210,7 +212,15 @@ async def _tts(text, voice, mp3_path):
 
 
 def make_voiceover(text, voice, mp3_path):
-    words = asyncio.run(_tts(text, voice, mp3_path))
+    words = []
+    for attempt in range(4):   # the free voice service sometimes hiccups - retry
+        try:
+            words = asyncio.run(_tts(text, voice, mp3_path))
+            if words:
+                break
+        except Exception as e:
+            log(f"(voice service hiccup: {str(e)[:80]} - retrying)")
+        import time; time.sleep(10 * (attempt + 1))
     if not words:
         sys.exit("ERROR: The voice service returned no audio. Check your internet connection.")
     return words
